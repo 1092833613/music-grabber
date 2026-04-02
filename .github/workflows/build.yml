@@ -22,18 +22,37 @@ jobs:
           options: -v ${{ github.workspace }}:/home/user/hostcwd
           run: |
             cd /home/user/hostcwd
+            
+            # 设置环境变量，自动确认所有提示
+            export TERM=dumb
+            export DEBIAN_FRONTEND=noninteractive
+            
             # 确保 buildozer.spec 存在
             if [ ! -f buildozer.spec ]; then
               echo "buildozer.spec not found!"
               exit 1
             fi
             
-            # 构建 APK
-            buildozer -v android debug
+            # 清理旧的构建
+            rm -rf .buildozer
+            rm -rf bin
+            
+            # 构建 APK（使用 yes 命令自动回答 y）
+            yes | buildozer -v android debug 2>&1
             
             # 显示输出
             echo "Build completed!"
-            ls -lh bin/
+            echo "Checking bin directory..."
+            ls -lh bin/ || echo "bin directory not found!"
+            
+            # 验证 APK 文件
+            if [ -f bin/*.apk ]; then
+              echo "APK file found!"
+              ls -lh bin/*.apk
+            else
+              echo "ERROR: APK file not found!"
+              exit 1
+            fi
       
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
