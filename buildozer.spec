@@ -7,24 +7,20 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 1.0.0
 
-# Android 14 兼容配置
-requirements = python3==3.8.10,kivy==2.2.0,pyjnius==1.5.0,pysdl2==0.9.14
-
-# 简化依赖，移除可能导致问题的
-# yt-dlp, pydub, mutagen 在运行时加载
+# 稳定依赖（Android 13 兼容）
+requirements = python3,kivy==2.1.0,pyjnius,requests,beautifulsoup4
 
 orientation = portrait
 
-# Android 14 权限配置
-android.api = 34
+# Android 13（稳定版本）
+android.api = 33
 android.minapi = 21
 android.ndk = 25b
 android.archs = arm64-v8a, armeabi-v7a
 
-# 权限（最小化）
-android.permissions = INTERNET,READ_MEDIA_IMAGES,READ_MEDIA_AUDIO
+# 权限（兼容 Android 13）
+android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE
 
-# 禁用自动权限请求
 android.accept_sdk_license = True
 
 # 日志
