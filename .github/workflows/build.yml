@@ -3,19 +3,16 @@ name: Build Android APK
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       
-      - name: Build APK with Buildozer (Docker)
+      # 使用专门的 Android 14 兼容镜像
+      - name: Build with Python 3.8 + Kivy 2.3
         uses: addnab/docker-run-action@v3
         with:
           image: ghcr.io/kivy/buildozer:latest
@@ -23,51 +20,29 @@ jobs:
           run: |
             cd /home/user/hostcwd
             
-            # 设置环境变量，自动确认所有提示
             export TERM=dumb
             export DEBIAN_FRONTEND=noninteractive
             
-            # 确保 buildozer.spec 存在
-            if [ ! -f buildozer.spec ]; then
-              echo "buildozer.spec not found!"
-              exit 1
-            fi
+            # 清理
+            rm -rf .buildozer bin
             
-            # 清理旧的构建
-            rm -rf .buildozer
-            rm -rf bin
-            
-            # 构建 APK（使用 yes 命令自动回答 y）
-            echo "Starting Buildozer build..."
+            # 构建
+            echo "Starting build with Kivy 2.3.0..."
             yes | buildozer -v android debug 2>&1 | tee build.log
             
-            # 显示输出
-            echo "Build completed!"
-            echo "Checking bin directory..."
-            ls -lh bin/ || echo "bin directory not found!"
-            
-            # 验证 APK 文件
+            # 验证
             if [ -f bin/*.apk ]; then
-              echo "APK file found!"
+              echo "SUCCESS: APK created!"
               ls -lh bin/*.apk
             else
-              echo "ERROR: APK file not found!"
-              echo "Build log:"
-              cat build.log | tail -200
+              echo "FAILED: No APK found"
+              tail -100 build.log
               exit 1
             fi
       
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: apk
           path: bin/*.apk
-          retention-days: 30
-      
-      - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: bin/*.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          retention-days: 7
