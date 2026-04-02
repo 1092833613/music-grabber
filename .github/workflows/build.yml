@@ -38,6 +38,7 @@ jobs:
             rm -rf bin
             
             # 构建 APK（使用 yes 命令自动回答 y）
+            echo "Starting Buildozer build..."
             yes | buildozer -v android debug 2>&1 | tee build.log
             
             # 显示输出
@@ -52,7 +53,7 @@ jobs:
             else
               echo "ERROR: APK file not found!"
               echo "Build log:"
-              cat build.log | tail -100
+              cat build.log | tail -200
               exit 1
             fi
       
