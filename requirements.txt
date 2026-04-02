@@ -1,15 +1,8 @@
 # 核心依赖
-yt-dlp>=2024.0.0
 kivy>=2.3.0
-kivy-ios>=3.0.0
-
-# 格式转换
+yt-dlp>=2024.0.0
 pydub>=0.25.0
-
-# ID3 标签编辑
 mutagen>=1.46.0
-
-# 工具库
 requests>=2.31.0
 beautifulsoup4>=4.12.0
 

@@ -1,19 +1,62 @@
 """
 音乐抓取核心 - 下载模块
 基于 yt-dlp 实现通用音频下载
+
+改进：
+- 改进 3: 完善错误处理
+- 改进 4: 添加网络重试机制
+- 改进 6: 优化下载目录
 """
 
 import yt_dlp
 import os
+import logging
 from typing import Optional, Callable, Dict, Any
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+import requests
+
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+# ========== 改进 4: 网络重试机制 ==========
+def create_session_with_retry():
+    """创建带重试机制的 HTTP Session"""
+    session = requests.Session()
+    retry = Retry(
+        total=3,  # 最多重试 3 次
+        backoff_factor=0.3,  # 重试间隔：0.3s, 0.6s, 1.2s
+        status_forcelist=[429, 500, 502, 503, 504],  # 需要重试的状态码
+        allowed_methods=["HEAD", "GET", "OPTIONS"]
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    return session
+# ===========================================
 
 
 class MusicDownloader:
     """通用音频下载器"""
     
-    def __init__(self, output_dir: str = "./downloads"):
+    def __init__(self, output_dir: Optional[str] = None):
+        # ========== 改进 6: 使用 Android 标准目录 ==========
+        if output_dir is None:
+            try:
+                from android.storage import app_storage_path
+                output_dir = os.path.join(app_storage_path(), "Music")
+            except ImportError:
+                # Desktop fallback
+                output_dir = os.path.join(os.path.expanduser("~"), "Music", "music_grabber")
+        
         self.output_dir = output_dir
         os.makedirs(output_dir, exist_ok=True)
+        # ===========================================
+        
+        # 初始化带重试的 session
+        self.session = create_session_with_retry()
         
     def download(self, 
                  url: str, 
@@ -86,12 +129,23 @@ class MusicDownloader:
                     self.output_dir, 
                     f"{info.get('title', 'unknown')}.{format}"
                 )
-        except Exception as e:
-            result["error"] = str(e)
+        except yt_dlp.utils.DownloadError as e:
+            error_msg = f"下载失败：{str(e)}"
+            result["error"] = error_msg
+            logger.error(error_msg)
             if progress_callback:
                 progress_callback({
                     "status": "error",
-                    "error": str(e),
+                    "error": error_msg,
+                })
+        except Exception as e:
+            error_msg = f"未知错误：{str(e)}"
+            result["error"] = error_msg
+            logger.exception(e)
+            if progress_callback:
+                progress_callback({
+                    "status": "error",
+                    "error": error_msg,
                 })
         
         return result
@@ -115,10 +169,19 @@ class MusicDownloader:
                     "thumbnail": info.get("thumbnail", ""),
                     "url": url,
                 }
-        except Exception as e:
+        except yt_dlp.utils.DownloadError as e:
+            error_msg = f"获取信息失败：{str(e)}"
+            logger.error(error_msg)
             return {
                 "success": False,
-                "error": str(e),
+                "error": error_msg,
+            }
+        except Exception as e:
+            error_msg = f"未知错误：{str(e)}"
+            logger.exception(e)
+            return {
+                "success": False,
+                "error": error_msg,
             }
 
 

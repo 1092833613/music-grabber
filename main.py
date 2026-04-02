@@ -13,6 +13,39 @@
 - 🎵 播放列表
 """
 
+import sys
+import traceback
+import os
+
+# ========== 改进 1: 启动错误捕获 ==========
+def handle_exception(exc_type, exc_value, exc_traceback):
+    """全局异常处理器 - 记录闪退日志"""
+    if issubclass(exc_type, KeyboardInterrupt):
+        return
+    
+    # 格式化错误信息
+    error_msg = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    
+    # 保存到文件（Android 外部存储）
+    try:
+        log_dir = '/sdcard/music_grabber_logs/'
+        os.makedirs(log_dir, exist_ok=True)
+        log_file = os.path.join(log_dir, 'crash.log')
+        
+        with open(log_file, 'w', encoding='utf-8') as f:
+            f.write("=" * 60 + "\n")
+            f.write("Music Grabber App - Crash Log\n")
+            f.write("=" * 60 + "\n\n")
+            f.write(error_msg)
+        
+        print(f"Crash log saved to: {log_file}")
+    except Exception as e:
+        print(f"Failed to save crash log: {e}")
+
+# 设置全局异常处理器
+sys.excepthook = handle_exception
+# ===========================================
+
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, SlideTransition
 from kivy.core.window import Window
@@ -51,6 +84,26 @@ class MusicGrabberApp(App):
         sm.add_widget(PlaylistScreen(name="playlist"))
         
         return sm
+    
+    def on_start(self):
+        """App 启动时执行"""
+        # ========== 改进 2: 权限请求 ==========
+        try:
+            from android.permissions import request_permissions, Permission
+            
+            request_permissions(
+                [
+                    Permission.WRITE_EXTERNAL_STORAGE,
+                    Permission.READ_EXTERNAL_STORAGE,
+                    Permission.INTERNET,
+                    Permission.ACCESS_NETWORK_STATE,
+                ],
+                reason="需要存储权限来保存下载的音乐",
+            )
+            print("Permissions requested successfully")
+        except ImportError:
+            print("Android permissions not available (running on desktop)")
+        # ======================================
     
     def on_pause(self):
         """Android 后台运行"""
