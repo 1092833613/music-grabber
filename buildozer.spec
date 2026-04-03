@@ -1,11 +1,11 @@
 [app]
-title = Music KV Test
+title = Music UI Test
 package.name = musicgrabber
 package.domain = org.example
 
 source.dir = .
 source.include_exts = py,png,jpg,kv
-version = 2.0.3
+version = 2.0.4
 
 requirements = python3,kivy==2.3.0
 
