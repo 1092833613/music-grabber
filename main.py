@@ -1,23 +1,59 @@
 """
-音乐抓取 App - 完整功能版本
-Android 14 兼容版 v2.0.5
+音乐抓取 App - 不使用 ScreenManager 的版本
 """
 
 from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager, SlideTransition
-from kivy.config import Config
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
+from kivy.uix.button import Button
+from kivy.uix.textinput import TextInput
 from kivy.lang import Builder
 
-# 移动端配置
-Config.set("graphics", "width", "360")
-Config.set("graphics", "height", "640")
-Config.set("input", "mouse", "mouse,multitouch_on_demand")
 
-# 导入界面
-from ui.main_screen import MainScreen, KV as MAIN_KV
-from ui.search_screen import SearchScreen, KV as SEARCH_KV
-from ui.history_screen import HistoryScreen, KV as HISTORY_KV
-from ui.playlist_screen import PlaylistScreen, KV as PLAYLIST_KV
+# 主界面 KV
+MAIN_KV = """
+BoxLayout:
+    orientation: 'vertical'
+    padding: 20
+    spacing: 10
+    
+    Label:
+        text: '🎵 音乐抓取'
+        font_size: 24
+        size_hint_y: None
+        height: 50
+    
+    TextInput:
+        id: url_input
+        hint_text: '粘贴视频链接...'
+        multiline: False
+        size_hint_y: None
+        height: 50
+    
+    BoxLayout:
+        size_hint_y: None
+        height: 50
+        spacing: 10
+        
+        Button:
+            text: '搜索'
+            on_release: app.on_search()
+        
+        Button:
+            text: '下载'
+            on_release: app.on_download()
+    
+    Label:
+        id: status
+        text: '状态：就绪'
+        size_hint_y: None
+        height: 30
+"""
+
+
+class MainLayout(BoxLayout):
+    """主界面"""
+    pass
 
 
 class MusicGrabberApp(App):
@@ -25,33 +61,14 @@ class MusicGrabberApp(App):
     
     def build(self):
         self.title = "🎵 音乐抓取"
-        
-        # 加载所有 KV 界面
         Builder.load_string(MAIN_KV)
-        Builder.load_string(SEARCH_KV)
-        Builder.load_string(HISTORY_KV)
-        Builder.load_string(PLAYLIST_KV)
-        
-        # 创建屏幕管理器
-        sm = ScreenManager(transition=SlideTransition())
-        sm.add_widget(MainScreen(name="main"))
-        sm.add_widget(SearchScreen(name="search"))
-        sm.add_widget(HistoryScreen(name="history"))
-        sm.add_widget(PlaylistScreen(name="playlist"))
-        
-        return sm
+        return MainLayout()
     
-    def on_pause(self):
-        """Android 后台运行"""
-        return True
+    def on_search(self):
+        print("搜索功能开发中...")
     
-    def on_resume(self):
-        """Android 恢复运行"""
-        pass
-    
-    def show_create_playlist_dialog(self):
-        """显示创建播放列表对话框"""
-        print("创建播放列表功能开发中...")
+    def on_download(self):
+        print("下载功能开发中...")
 
 
 if __name__ == "__main__":
