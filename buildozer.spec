@@ -4,10 +4,10 @@ package.name = musicgrabber
 package.domain = org.example
 
 source.dir = .
-source.include_exts = py,png,jpg,kv
-version = 2.0.7
+source.include_exts = py,png,jpg
+version = 2.0.8
 
-# 完整功能（不使用 ScreenManager）
+# 修复黑屏问题（纯 Python UI，不使用 KV）
 requirements = python3,kivy==2.3.0,pyjnius,requests,beautifulsoup4
 
 orientation = portrait
