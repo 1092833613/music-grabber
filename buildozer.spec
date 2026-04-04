@@ -5,16 +5,16 @@ package.domain = org.example
 
 source.dir = .
 source.include_exts = py,png,jpg,kv
-version = 2.0.6
+version = 2.0.7
 
-# 不使用 ScreenManager 的简化版本
-requirements = python3,kivy==2.3.0
+# 完整功能（不使用 ScreenManager）
+requirements = python3,kivy==2.3.0,pyjnius,requests,beautifulsoup4
 
 orientation = portrait
 android.api = 32
 android.minapi = 21
 android.ndk = 25b
-android.archs = arm64-v8a
+android.archs = arm64-v8a, armeabi-v7a
 
 android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE
 android.accept_sdk_license = True
