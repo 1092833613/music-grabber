@@ -4,10 +4,10 @@ package.name = musicgrabber
 package.domain = org.example
 
 source.dir = .
-source.include_exts = py,png,jpg
-version = 2.1.0
+source.include_exts = py,png,jpg,ttf
+version = 2.1.1
 
-# 完整功能中文版（支持保存链接）
+# 修复中文乱码（注册中文字体）
 requirements = python3,kivy==2.3.0
 
 orientation = portrait

@@ -1,6 +1,6 @@
 """
-音乐抓取 App - 完整功能中文版 v2.1.0
-支持保存下载链接
+音乐抓取 App - 修复中文乱码 v2.1.1
+注册 Android 系统中文字体
 """
 
 from kivy.app import App
@@ -11,9 +11,26 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 from kivy.clock import Clock
+from kivy.core.text import LabelBase
 import os
 import json
 from datetime import datetime
+
+# ========== 注册中文字体 ==========
+try:
+    # Android 系统中文字体
+    LabelBase.register(
+        name='DroidSansFallback',
+        fn_regular='/system/fonts/DroidSansFallback.ttf'
+    )
+    # 备用字体
+    LabelBase.register(
+        name='NotoSansSC',
+        fn_regular='/system/fonts/NotoSansSC-Regular.ttf'
+    )
+except Exception as e:
+    print(f"字体注册失败：{e}")
+# ==================================
 
 # 设置窗口背景色为白色
 Window.clearcolor = (0.95, 0.95, 0.95, 1)
@@ -30,7 +47,7 @@ class MusicGrabberApp(App):
     def build(self):
         self.title = "音乐抓取"
         
-        # 主布局 - 使用 ScrollView 支持滚动
+        # 主布局
         main_layout = BoxLayout(orientation='vertical')
         
         # 滚动区域
@@ -45,9 +62,10 @@ class MusicGrabberApp(App):
         scroll.add_widget(layout)
         main_layout.add_widget(scroll)
         
-        # 1. 标题
+        # 1. 标题 - 使用中文字体
         title = Label(
             text='🎵 音乐抓取',
+            font_name='DroidSansFallback',
             font_size='28sp',
             size_hint_y=None,
             height=70,
@@ -59,6 +77,7 @@ class MusicGrabberApp(App):
         # 2. 说明
         desc = Label(
             text='支持 YouTube、B 站、抖音等平台',
+            font_name='DroidSansFallback',
             font_size='16sp',
             size_hint_y=None,
             height=35,
@@ -69,6 +88,7 @@ class MusicGrabberApp(App):
         # 3. URL 输入框
         input_label = Label(
             text='视频链接:',
+            font_name='DroidSansFallback',
             font_size='18sp',
             size_hint_y=None,
             height=35,
@@ -91,6 +111,7 @@ class MusicGrabberApp(App):
         # 4. 格式选择
         format_label = Label(
             text='输出格式:',
+            font_name='DroidSansFallback',
             font_size='18sp',
             size_hint_y=None,
             height=35,
@@ -137,6 +158,7 @@ class MusicGrabberApp(App):
         # 6. 状态显示
         self.status = Label(
             text='状态：就绪',
+            font_name='DroidSansFallback',
             size_hint_y=None,
             height=45,
             color=(0, 0.6, 0, 1),
@@ -157,6 +179,7 @@ class MusicGrabberApp(App):
         # 8. 历史记录标题
         history_title = Label(
             text='📋 下载历史',
+            font_name='DroidSansFallback',
             font_size='22sp',
             size_hint_y=None,
             height=50,
@@ -210,7 +233,6 @@ class MusicGrabberApp(App):
         self.status.text = '状态：获取信息中...'
         self.status.color = (0, 0, 1, 1)
         
-        # 模拟获取信息（实际应调用 API）
         Clock.schedule_once(lambda dt: self._show_info(url), 1)
     
     def _show_info(self, url):
@@ -229,18 +251,14 @@ class MusicGrabberApp(App):
         self.status.text = '状态：下载中...'
         self.status.color = (0, 0, 1, 1)
         
-        # 模拟下载
         Clock.schedule_once(lambda dt: self._download_complete(url), 2)
     
     def _download_complete(self, url):
         """下载完成"""
-        # 保存到历史
         self.save_to_history(url)
         
         self.status.text = '状态：下载完成！'
         self.status.color = (0, 0.8, 0, 1)
-        
-        # 清空输入框
         self.url_input.text = ''
     
     def save_to_history(self, url):
@@ -252,11 +270,9 @@ class MusicGrabberApp(App):
         }
         self.download_history.insert(0, record)
         
-        # 限制历史记录数量
         if len(self.download_history) > 20:
             self.download_history = self.download_history[:20]
         
-        # 保存到文件
         try:
             os.makedirs('/sdcard/', exist_ok=True)
             with open(DATA_FILE, 'w', encoding='utf-8') as f:
@@ -264,7 +280,6 @@ class MusicGrabberApp(App):
         except Exception as e:
             print(f"保存失败：{e}")
         
-        # 刷新历史显示
         self.refresh_history()
     
     def load_history(self):
@@ -284,6 +299,7 @@ class MusicGrabberApp(App):
         if not self.download_history:
             label = Label(
                 text='暂无历史记录',
+                font_name='DroidSansFallback',
                 size_hint_y=None,
                 height=40,
                 color=(0.6, 0.6, 0.6, 1)
@@ -298,14 +314,10 @@ class MusicGrabberApp(App):
                 height=70,
                 padding=10
             )
-            item_layout.canvas.before.clear()
-            with item_layout.canvas.before:
-                from kivy.graphics import Color, Rectangle
-                Color(1, 1, 1, 0.9)
-                Rectangle(pos=item_layout.pos, size=item_layout.size)
             
             url_label = Label(
                 text=f"🔗 {record['url'][:50]}...",
+                font_name='DroidSansFallback',
                 font_size='14sp',
                 size_hint_y=None,
                 height=35,
@@ -316,6 +328,7 @@ class MusicGrabberApp(App):
             
             info_label = Label(
                 text=f"{record['format'].upper()} · {record['time']}",
+                font_name='DroidSansFallback',
                 font_size='12sp',
                 size_hint_y=None,
                 height=25,
