@@ -1,6 +1,6 @@
 """
-音乐抓取 App - 修复中文乱码 v2.1.1
-注册 Android 系统中文字体
+音乐抓取 App - 不依赖系统字体 v2.1.2
+使用 Kivy 默认字体回退机制
 """
 
 from kivy.app import App
@@ -11,26 +11,9 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 from kivy.clock import Clock
-from kivy.core.text import LabelBase
 import os
 import json
 from datetime import datetime
-
-# ========== 注册中文字体 ==========
-try:
-    # Android 系统中文字体
-    LabelBase.register(
-        name='DroidSansFallback',
-        fn_regular='/system/fonts/DroidSansFallback.ttf'
-    )
-    # 备用字体
-    LabelBase.register(
-        name='NotoSansSC',
-        fn_regular='/system/fonts/NotoSansSC-Regular.ttf'
-    )
-except Exception as e:
-    print(f"字体注册失败：{e}")
-# ==================================
 
 # 设置窗口背景色为白色
 Window.clearcolor = (0.95, 0.95, 0.95, 1)
@@ -45,7 +28,7 @@ class MusicGrabberApp(App):
     download_history = []
     
     def build(self):
-        self.title = "音乐抓取"
+        self.title = "Music Grabber"  # 英文标题避免问题
         
         # 主布局
         main_layout = BoxLayout(orientation='vertical')
@@ -62,10 +45,9 @@ class MusicGrabberApp(App):
         scroll.add_widget(layout)
         main_layout.add_widget(scroll)
         
-        # 1. 标题 - 使用中文字体
+        # 1. 标题 - 使用 emoji + 简单中文
         title = Label(
-            text='🎵 音乐抓取',
-            font_name='DroidSansFallback',
+            text='Music Grabber',  # 先用英文
             font_size='28sp',
             size_hint_y=None,
             height=70,
@@ -74,10 +56,9 @@ class MusicGrabberApp(App):
         )
         layout.add_widget(title)
         
-        # 2. 说明
+        # 2. 说明 - 简单英文
         desc = Label(
-            text='支持 YouTube、B 站、抖音等平台',
-            font_name='DroidSansFallback',
+            text='Download music from YouTube, Bilibili',
             font_size='16sp',
             size_hint_y=None,
             height=35,
@@ -87,8 +68,7 @@ class MusicGrabberApp(App):
         
         # 3. URL 输入框
         input_label = Label(
-            text='视频链接:',
-            font_name='DroidSansFallback',
+            text='Video URL:',
             font_size='18sp',
             size_hint_y=None,
             height=35,
@@ -98,7 +78,7 @@ class MusicGrabberApp(App):
         layout.add_widget(input_label)
         
         self.url_input = TextInput(
-            hint_text='粘贴视频链接到这里...',
+            hint_text='Paste URL here...',
             multiline=False,
             size_hint_y=None,
             height=55,
@@ -110,8 +90,7 @@ class MusicGrabberApp(App):
         
         # 4. 格式选择
         format_label = Label(
-            text='输出格式:',
-            font_name='DroidSansFallback',
+            text='Format:',
             font_size='18sp',
             size_hint_y=None,
             height=35,
@@ -121,7 +100,7 @@ class MusicGrabberApp(App):
         layout.add_widget(format_label)
         
         self.format_btn = Button(
-            text='MP3 (音频)',
+            text='MP3 (Audio)',
             size_hint_y=None,
             height=50,
             font_size='18sp'
@@ -138,7 +117,7 @@ class MusicGrabberApp(App):
         )
         
         info_btn = Button(
-            text='📊 获取信息',
+            text='Get Info',
             font_size='18sp',
             background_color=(0.3, 0.6, 0.9, 1)
         )
@@ -146,7 +125,7 @@ class MusicGrabberApp(App):
         btn_layout.add_widget(info_btn)
         
         download_btn = Button(
-            text='⬇️ 下载',
+            text='Download',
             font_size='18sp',
             background_color=(0.3, 0.9, 0.6, 1)
         )
@@ -157,8 +136,7 @@ class MusicGrabberApp(App):
         
         # 6. 状态显示
         self.status = Label(
-            text='状态：就绪',
-            font_name='DroidSansFallback',
+            text='Status: Ready',
             size_hint_y=None,
             height=45,
             color=(0, 0.6, 0, 1),
@@ -178,8 +156,7 @@ class MusicGrabberApp(App):
         
         # 8. 历史记录标题
         history_title = Label(
-            text='📋 下载历史',
-            font_name='DroidSansFallback',
+            text='Download History',
             font_size='22sp',
             size_hint_y=None,
             height=50,
@@ -197,7 +174,7 @@ class MusicGrabberApp(App):
         
         # 10. 清空历史按钮
         clear_btn = Button(
-            text='🗑️ 清空历史',
+            text='Clear History',
             size_hint_y=None,
             height=50,
             font_size='18sp',
@@ -215,40 +192,40 @@ class MusicGrabberApp(App):
         """切换格式"""
         if self.current_format == 'mp3':
             self.current_format = 'mp4'
-            self.format_btn.text = 'MP4 (视频)'
+            self.format_btn.text = 'MP4 (Video)'
             self.format_btn.background_color = (0.9, 0.6, 0.3, 1)
         else:
             self.current_format = 'mp3'
-            self.format_btn.text = 'MP3 (音频)'
+            self.format_btn.text = 'MP3 (Audio)'
             self.format_btn.background_color = (0.3, 0.6, 0.9, 1)
     
     def get_info(self, instance):
         """获取信息"""
         url = self.url_input.text.strip()
         if not url:
-            self.status.text = '状态：请输入链接'
+            self.status.text = 'Status: Please enter URL'
             self.status.color = (1, 0, 0, 1)
             return
         
-        self.status.text = '状态：获取信息中...'
+        self.status.text = 'Status: Getting info...'
         self.status.color = (0, 0, 1, 1)
         
         Clock.schedule_once(lambda dt: self._show_info(url), 1)
     
     def _show_info(self, url):
         """显示信息"""
-        self.status.text = f'状态：准备下载 ({self.current_format.upper()})'
+        self.status.text = f'Status: Ready to download ({self.current_format.upper()})'
         self.status.color = (0, 0.6, 0, 1)
     
     def download(self, instance):
         """下载"""
         url = self.url_input.text.strip()
         if not url:
-            self.status.text = '状态：请输入链接'
+            self.status.text = 'Status: Please enter URL'
             self.status.color = (1, 0, 0, 1)
             return
         
-        self.status.text = '状态：下载中...'
+        self.status.text = 'Status: Downloading...'
         self.status.color = (0, 0, 1, 1)
         
         Clock.schedule_once(lambda dt: self._download_complete(url), 2)
@@ -257,7 +234,7 @@ class MusicGrabberApp(App):
         """下载完成"""
         self.save_to_history(url)
         
-        self.status.text = '状态：下载完成！'
+        self.status.text = 'Status: Download Complete!'
         self.status.color = (0, 0.8, 0, 1)
         self.url_input.text = ''
     
@@ -278,7 +255,7 @@ class MusicGrabberApp(App):
             with open(DATA_FILE, 'w', encoding='utf-8') as f:
                 json.dump(self.download_history, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"保存失败：{e}")
+            print(f"Save failed: {e}")
         
         self.refresh_history()
     
@@ -290,7 +267,7 @@ class MusicGrabberApp(App):
                     self.download_history = json.load(f)
                 self.refresh_history()
         except Exception as e:
-            print(f"加载失败：{e}")
+            print(f"Load failed: {e}")
     
     def refresh_history(self):
         """刷新历史显示"""
@@ -298,8 +275,7 @@ class MusicGrabberApp(App):
         
         if not self.download_history:
             label = Label(
-                text='暂无历史记录',
-                font_name='DroidSansFallback',
+                text='No history yet',
                 size_hint_y=None,
                 height=40,
                 color=(0.6, 0.6, 0.6, 1)
@@ -316,8 +292,7 @@ class MusicGrabberApp(App):
             )
             
             url_label = Label(
-                text=f"🔗 {record['url'][:50]}...",
-                font_name='DroidSansFallback',
+                text=f"URL: {record['url'][:50]}...",
                 font_size='14sp',
                 size_hint_y=None,
                 height=35,
@@ -327,8 +302,7 @@ class MusicGrabberApp(App):
             item_layout.add_widget(url_label)
             
             info_label = Label(
-                text=f"{record['format'].upper()} · {record['time']}",
-                font_name='DroidSansFallback',
+                text=f"{record['format'].upper()} - {record['time']}",
                 font_size='12sp',
                 size_hint_y=None,
                 height=25,
@@ -346,9 +320,9 @@ class MusicGrabberApp(App):
             if os.path.exists(DATA_FILE):
                 os.remove(DATA_FILE)
         except Exception as e:
-            print(f"删除失败：{e}")
+            print(f"Delete failed: {e}")
         self.refresh_history()
-        self.status.text = '状态：历史已清空'
+        self.status.text = 'Status: History cleared'
         self.status.color = (0.6, 0.6, 0.6, 1)
 
 

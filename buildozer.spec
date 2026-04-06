@@ -1,13 +1,13 @@
 [app]
-title = 音乐抓取
+title = Music Grabber
 package.name = musicgrabber
 package.domain = org.example
 
 source.dir = .
-source.include_exts = py,png,jpg,ttf
-version = 2.1.1
+source.include_exts = py,png,jpg
+version = 2.1.2
 
-# 修复中文乱码（注册中文字体）
+# 英文界面（避免字体问题）
 requirements = python3,kivy==2.3.0
 
 orientation = portrait
