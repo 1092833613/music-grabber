@@ -1,14 +1,14 @@
 [app]
-title = Music Grabber
+title = 音乐抓取
 package.name = musicgrabber
 package.domain = org.example
 
 source.dir = .
 source.include_exts = py,png,jpg
-version = 2.1.2
+version = 3.0.0
 
-# 英文界面（避免字体问题）
-requirements = python3,kivy==2.3.0
+# 中文稳定版（多字体回退）
+requirements = python3,kivy==2.3.0,pyjnius,requests,beautifulsoup4
 
 orientation = portrait
 android.api = 32
