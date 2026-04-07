@@ -1,6 +1,6 @@
 """
-音乐抓取 App - 不依赖系统字体 v2.1.2
-使用 Kivy 默认字体回退机制
+音乐抓取 App - 中文稳定版 v3.0.0
+使用多字体回退机制，确保中文正常显示
 """
 
 from kivy.app import App
@@ -11,12 +11,34 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 from kivy.clock import Clock
+from kivy.core.text import LabelBase
 import os
 import json
 from datetime import datetime
 
 # 设置窗口背景色为白色
 Window.clearcolor = (0.95, 0.95, 0.95, 1)
+
+# ========== 注册多个中文字体（尝试不同路径）==========
+FONT_PATHS = [
+    '/system/fonts/DroidSansFallback.ttf',
+    '/system/fonts/NotoSansSC-Regular.ttf',
+    '/system/fonts/NotoSansSC-Bold.ttf',
+    '/system/fonts/mtzl.ttf',  # 小米字体
+    '/system/fonts/HYWenHei.ttf',  # 华为字体
+]
+
+for font_path in FONT_PATHS:
+    if os.path.exists(font_path):
+        try:
+            LabelBase.register(name='Chinese', fn_regular=font_path)
+            print(f"字体注册成功：{font_path}")
+            break
+        except Exception as e:
+            print(f"字体注册失败 {font_path}: {e}")
+    else:
+        print(f"字体不存在：{font_path}")
+# ===============================================
 
 # 数据文件路径
 DATA_FILE = '/sdcard/music_grabber_data.json'
@@ -26,9 +48,10 @@ class MusicGrabberApp(App):
     """音乐抓取 App"""
     
     download_history = []
+    chinese_font = 'Chinese'
     
     def build(self):
-        self.title = "Music Grabber"  # 英文标题避免问题
+        self.title = "Music"
         
         # 主布局
         main_layout = BoxLayout(orientation='vertical')
@@ -45,40 +68,72 @@ class MusicGrabberApp(App):
         scroll.add_widget(layout)
         main_layout.add_widget(scroll)
         
-        # 1. 标题 - 使用 emoji + 简单中文
-        title = Label(
-            text='Music Grabber',  # 先用英文
-            font_size='28sp',
-            size_hint_y=None,
-            height=70,
-            bold=True,
-            color=(0.2, 0.2, 0.8, 1)
-        )
+        # 1. 标题 - 尝试使用中文，如果失败用英文
+        try:
+            title = Label(
+                text='🎵 音乐抓取',
+                font_name=self.chinese_font,
+                font_size='28sp',
+                size_hint_y=None,
+                height=70,
+                bold=True,
+                color=(0.2, 0.2, 0.8, 1)
+            )
+        except:
+            title = Label(
+                text='🎵 Music Grabber',
+                font_size='28sp',
+                size_hint_y=None,
+                height=70,
+                bold=True,
+                color=(0.2, 0.2, 0.8, 1)
+            )
         layout.add_widget(title)
         
-        # 2. 说明 - 简单英文
-        desc = Label(
-            text='Download music from YouTube, Bilibili',
-            font_size='16sp',
-            size_hint_y=None,
-            height=35,
-            color=(0.4, 0.4, 0.4, 1)
-        )
+        # 2. 说明
+        try:
+            desc = Label(
+                text='支持 YouTube、B 站、抖音等平台',
+                font_name=self.chinese_font,
+                font_size='16sp',
+                size_hint_y=None,
+                height=35,
+                color=(0.4, 0.4, 0.4, 1)
+            )
+        except:
+            desc = Label(
+                text='Support YouTube, Bilibili, Douyin',
+                font_size='16sp',
+                size_hint_y=None,
+                height=35,
+                color=(0.4, 0.4, 0.4, 1)
+            )
         layout.add_widget(desc)
         
         # 3. URL 输入框
-        input_label = Label(
-            text='Video URL:',
-            font_size='18sp',
-            size_hint_y=None,
-            height=35,
-            halign='left',
-            color=(0.2, 0.2, 0.2, 1)
-        )
+        try:
+            input_label = Label(
+                text='视频链接:',
+                font_name=self.chinese_font,
+                font_size='18sp',
+                size_hint_y=None,
+                height=35,
+                halign='left',
+                color=(0.2, 0.2, 0.2, 1)
+            )
+        except:
+            input_label = Label(
+                text='Video URL:',
+                font_size='18sp',
+                size_hint_y=None,
+                height=35,
+                halign='left',
+                color=(0.2, 0.2, 0.2, 1)
+            )
         layout.add_widget(input_label)
         
         self.url_input = TextInput(
-            hint_text='Paste URL here...',
+            hint_text='粘贴视频链接到这里...',
             multiline=False,
             size_hint_y=None,
             height=55,
@@ -89,18 +144,29 @@ class MusicGrabberApp(App):
         layout.add_widget(self.url_input)
         
         # 4. 格式选择
-        format_label = Label(
-            text='Format:',
-            font_size='18sp',
-            size_hint_y=None,
-            height=35,
-            halign='left',
-            color=(0.2, 0.2, 0.2, 1)
-        )
+        try:
+            format_label = Label(
+                text='输出格式:',
+                font_name=self.chinese_font,
+                font_size='18sp',
+                size_hint_y=None,
+                height=35,
+                halign='left',
+                color=(0.2, 0.2, 0.2, 1)
+            )
+        except:
+            format_label = Label(
+                text='Format:',
+                font_size='18sp',
+                size_hint_y=None,
+                height=35,
+                halign='left',
+                color=(0.2, 0.2, 0.2, 1)
+            )
         layout.add_widget(format_label)
         
         self.format_btn = Button(
-            text='MP3 (Audio)',
+            text='MP3 (音频)',
             size_hint_y=None,
             height=50,
             font_size='18sp'
@@ -116,33 +182,56 @@ class MusicGrabberApp(App):
             spacing=15
         )
         
-        info_btn = Button(
-            text='Get Info',
-            font_size='18sp',
-            background_color=(0.3, 0.6, 0.9, 1)
-        )
-        info_btn.bind(on_press=self.get_info)
-        btn_layout.add_widget(info_btn)
+        try:
+            info_btn = Button(
+                text='📊 获取信息',
+                font_size='18sp',
+                background_color=(0.3, 0.6, 0.9, 1)
+            )
+            download_btn = Button(
+                text='⬇️ 下载',
+                font_size='18sp',
+                background_color=(0.3, 0.9, 0.6, 1)
+            )
+        except:
+            info_btn = Button(
+                text='📊 Get Info',
+                font_size='18sp',
+                background_color=(0.3, 0.6, 0.9, 1)
+            )
+            download_btn = Button(
+                text='⬇️ Download',
+                font_size='18sp',
+                background_color=(0.3, 0.9, 0.6, 1)
+            )
         
-        download_btn = Button(
-            text='Download',
-            font_size='18sp',
-            background_color=(0.3, 0.9, 0.6, 1)
-        )
+        info_btn.bind(on_press=self.get_info)
         download_btn.bind(on_press=self.download)
+        btn_layout.add_widget(info_btn)
         btn_layout.add_widget(download_btn)
         
         layout.add_widget(btn_layout)
         
         # 6. 状态显示
-        self.status = Label(
-            text='Status: Ready',
-            size_hint_y=None,
-            height=45,
-            color=(0, 0.6, 0, 1),
-            font_size='16sp',
-            bold=True
-        )
+        try:
+            self.status = Label(
+                text='状态：就绪',
+                font_name=self.chinese_font,
+                size_hint_y=None,
+                height=45,
+                color=(0, 0.6, 0, 1),
+                font_size='16sp',
+                bold=True
+            )
+        except:
+            self.status = Label(
+                text='Status: Ready',
+                size_hint_y=None,
+                height=45,
+                color=(0, 0.6, 0, 1),
+                font_size='16sp',
+                bold=True
+            )
         layout.add_widget(self.status)
         
         # 7. 分隔线
@@ -155,14 +244,25 @@ class MusicGrabberApp(App):
         layout.add_widget(separator)
         
         # 8. 历史记录标题
-        history_title = Label(
-            text='Download History',
-            font_size='22sp',
-            size_hint_y=None,
-            height=50,
-            bold=True,
-            color=(0.2, 0.2, 0.8, 1)
-        )
+        try:
+            history_title = Label(
+                text='📋 下载历史',
+                font_name=self.chinese_font,
+                font_size='22sp',
+                size_hint_y=None,
+                height=50,
+                bold=True,
+                color=(0.2, 0.2, 0.8, 1)
+            )
+        except:
+            history_title = Label(
+                text='📋 Download History',
+                font_size='22sp',
+                size_hint_y=None,
+                height=50,
+                bold=True,
+                color=(0.2, 0.2, 0.8, 1)
+            )
         layout.add_widget(history_title)
         
         # 9. 历史记录列表
@@ -173,13 +273,22 @@ class MusicGrabberApp(App):
         layout.add_widget(self.history_layout)
         
         # 10. 清空历史按钮
-        clear_btn = Button(
-            text='Clear History',
-            size_hint_y=None,
-            height=50,
-            font_size='18sp',
-            background_color=(0.9, 0.3, 0.3, 1)
-        )
+        try:
+            clear_btn = Button(
+                text='🗑️ 清空历史',
+                size_hint_y=None,
+                height=50,
+                font_size='18sp',
+                background_color=(0.9, 0.3, 0.3, 1)
+            )
+        except:
+            clear_btn = Button(
+                text='🗑️ Clear History',
+                size_hint_y=None,
+                height=50,
+                font_size='18sp',
+                background_color=(0.9, 0.3, 0.3, 1)
+            )
         clear_btn.bind(on_press=self.clear_history)
         layout.add_widget(clear_btn)
         
@@ -192,40 +301,61 @@ class MusicGrabberApp(App):
         """切换格式"""
         if self.current_format == 'mp3':
             self.current_format = 'mp4'
-            self.format_btn.text = 'MP4 (Video)'
+            try:
+                self.format_btn.text = 'MP4 (视频)'
+            except:
+                self.format_btn.text = 'MP4 (Video)'
             self.format_btn.background_color = (0.9, 0.6, 0.3, 1)
         else:
             self.current_format = 'mp3'
-            self.format_btn.text = 'MP3 (Audio)'
+            try:
+                self.format_btn.text = 'MP3 (音频)'
+            except:
+                self.format_btn.text = 'MP3 (Audio)'
             self.format_btn.background_color = (0.3, 0.6, 0.9, 1)
     
     def get_info(self, instance):
         """获取信息"""
         url = self.url_input.text.strip()
         if not url:
-            self.status.text = 'Status: Please enter URL'
+            try:
+                self.status.text = '状态：请输入链接'
+            except:
+                self.status.text = 'Status: Please enter URL'
             self.status.color = (1, 0, 0, 1)
             return
         
-        self.status.text = 'Status: Getting info...'
+        try:
+            self.status.text = '状态：获取信息中...'
+        except:
+            self.status.text = 'Status: Getting info...'
         self.status.color = (0, 0, 1, 1)
         
         Clock.schedule_once(lambda dt: self._show_info(url), 1)
     
     def _show_info(self, url):
         """显示信息"""
-        self.status.text = f'Status: Ready to download ({self.current_format.upper()})'
+        try:
+            self.status.text = f'状态：准备下载 ({self.current_format.upper()})'
+        except:
+            self.status.text = f'Status: Ready to download ({self.current_format.upper()})'
         self.status.color = (0, 0.6, 0, 1)
     
     def download(self, instance):
         """下载"""
         url = self.url_input.text.strip()
         if not url:
-            self.status.text = 'Status: Please enter URL'
+            try:
+                self.status.text = '状态：请输入链接'
+            except:
+                self.status.text = 'Status: Please enter URL'
             self.status.color = (1, 0, 0, 1)
             return
         
-        self.status.text = 'Status: Downloading...'
+        try:
+            self.status.text = '状态：下载中...'
+        except:
+            self.status.text = 'Status: Downloading...'
         self.status.color = (0, 0, 1, 1)
         
         Clock.schedule_once(lambda dt: self._download_complete(url), 2)
@@ -234,7 +364,10 @@ class MusicGrabberApp(App):
         """下载完成"""
         self.save_to_history(url)
         
-        self.status.text = 'Status: Download Complete!'
+        try:
+            self.status.text = '状态：下载完成！'
+        except:
+            self.status.text = 'Status: Download Complete!'
         self.status.color = (0, 0.8, 0, 1)
         self.url_input.text = ''
     
@@ -255,7 +388,7 @@ class MusicGrabberApp(App):
             with open(DATA_FILE, 'w', encoding='utf-8') as f:
                 json.dump(self.download_history, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"Save failed: {e}")
+            print(f"保存失败：{e}")
         
         self.refresh_history()
     
@@ -267,19 +400,28 @@ class MusicGrabberApp(App):
                     self.download_history = json.load(f)
                 self.refresh_history()
         except Exception as e:
-            print(f"Load failed: {e}")
+            print(f"加载失败：{e}")
     
     def refresh_history(self):
         """刷新历史显示"""
         self.history_layout.clear_widgets()
         
         if not self.download_history:
-            label = Label(
-                text='No history yet',
-                size_hint_y=None,
-                height=40,
-                color=(0.6, 0.6, 0.6, 1)
-            )
+            try:
+                label = Label(
+                    text='暂无历史记录',
+                    font_name=self.chinese_font,
+                    size_hint_y=None,
+                    height=40,
+                    color=(0.6, 0.6, 0.6, 1)
+                )
+            except:
+                label = Label(
+                    text='No history yet',
+                    size_hint_y=None,
+                    height=40,
+                    color=(0.6, 0.6, 0.6, 1)
+                )
             self.history_layout.add_widget(label)
             return
         
@@ -291,26 +433,45 @@ class MusicGrabberApp(App):
                 padding=10
             )
             
-            url_label = Label(
-                text=f"URL: {record['url'][:50]}...",
-                font_size='14sp',
-                size_hint_y=None,
-                height=35,
-                halign='left',
-                color=(0.2, 0.2, 0.2, 1)
-            )
+            try:
+                url_label = Label(
+                    text=f"🔗 {record['url'][:50]}...",
+                    font_name=self.chinese_font,
+                    font_size='14sp',
+                    size_hint_y=None,
+                    height=35,
+                    halign='left',
+                    color=(0.2, 0.2, 0.2, 1)
+                )
+                info_label = Label(
+                    text=f"{record['format'].upper()} · {record['time']}",
+                    font_name=self.chinese_font,
+                    font_size='12sp',
+                    size_hint_y=None,
+                    height=25,
+                    halign='left',
+                    color=(0.5, 0.5, 0.5, 1)
+                )
+            except:
+                url_label = Label(
+                    text=f"URL: {record['url'][:50]}...",
+                    font_size='14sp',
+                    size_hint_y=None,
+                    height=35,
+                    halign='left',
+                    color=(0.2, 0.2, 0.2, 1)
+                )
+                info_label = Label(
+                    text=f"{record['format'].upper()} - {record['time']}",
+                    font_size='12sp',
+                    size_hint_y=None,
+                    height=25,
+                    halign='left',
+                    color=(0.5, 0.5, 0.5, 1)
+                )
+            
             item_layout.add_widget(url_label)
-            
-            info_label = Label(
-                text=f"{record['format'].upper()} - {record['time']}",
-                font_size='12sp',
-                size_hint_y=None,
-                height=25,
-                halign='left',
-                color=(0.5, 0.5, 0.5, 1)
-            )
             item_layout.add_widget(info_label)
-            
             self.history_layout.add_widget(item_layout)
     
     def clear_history(self, instance):
@@ -320,9 +481,12 @@ class MusicGrabberApp(App):
             if os.path.exists(DATA_FILE):
                 os.remove(DATA_FILE)
         except Exception as e:
-            print(f"Delete failed: {e}")
+            print(f"删除失败：{e}")
         self.refresh_history()
-        self.status.text = 'Status: History cleared'
+        try:
+            self.status.text = '状态：历史已清空'
+        except:
+            self.status.text = 'Status: History cleared'
         self.status.color = (0.6, 0.6, 0.6, 1)
 
 
