@@ -1,6 +1,6 @@
 """
-音乐抓取 App - 中文稳定版 v3.0.0
-使用多字体回退机制，确保中文正常显示
+音乐抓取 App - 中文稳定版 v3.0.1
+内置中文字体，彻底解决乱码问题
 """
 
 from kivy.app import App
@@ -19,25 +19,36 @@ from datetime import datetime
 # 设置窗口背景色为白色
 Window.clearcolor = (0.95, 0.95, 0.95, 1)
 
-# ========== 注册多个中文字体（尝试不同路径）==========
-FONT_PATHS = [
-    '/system/fonts/DroidSansFallback.ttf',
-    '/system/fonts/NotoSansSC-Regular.ttf',
-    '/system/fonts/NotoSansSC-Bold.ttf',
-    '/system/fonts/mtzl.ttf',  # 小米字体
-    '/system/fonts/HYWenHei.ttf',  # 华为字体
-]
+# ========== 注册内置中文字体（从 APK assets 加载）==========
+def register_chinese_font():
+    """注册中文字体 - 优先使用内置字体"""
+    font_paths = []
+    
+    # 1. 首先尝试内置字体（打包在 APK 中）
+    app_dir = os.path.dirname(os.path.abspath(__file__))
+    builtin_font = os.path.join(app_dir, 'fonts', 'NotoSansSC-Regular.ttf')
+    font_paths.append(builtin_font)
+    
+    # 2. 备用：Android 系统字体路径
+    font_paths.extend([
+        '/system/fonts/NotoSansSC-Regular.ttf',
+        '/system/fonts/DroidSansFallback.ttf',
+    ])
+    
+    for font_path in font_paths:
+        if os.path.exists(font_path):
+            try:
+                LabelBase.register(name='Chinese', fn_regular=font_path)
+                print(f"✅ 字体注册成功：{font_path}")
+                return True
+            except Exception as e:
+                print(f"❌ 字体注册失败 {font_path}: {e}")
+    
+    print("⚠️ 未找到中文字体，将使用默认字体（可能显示乱码）")
+    return False
 
-for font_path in FONT_PATHS:
-    if os.path.exists(font_path):
-        try:
-            LabelBase.register(name='Chinese', fn_regular=font_path)
-            print(f"字体注册成功：{font_path}")
-            break
-        except Exception as e:
-            print(f"字体注册失败 {font_path}: {e}")
-    else:
-        print(f"字体不存在：{font_path}")
+# 启动时注册字体
+register_chinese_font()
 # ===============================================
 
 # 数据文件路径
@@ -51,7 +62,7 @@ class MusicGrabberApp(App):
     chinese_font = 'Chinese'
     
     def build(self):
-        self.title = "Music"
+        self.title = "音乐抓取"
         
         # 主布局
         main_layout = BoxLayout(orientation='vertical')
